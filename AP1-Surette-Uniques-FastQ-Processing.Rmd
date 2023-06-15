@@ -1,0 +1,69 @@
+---
+title: "All-PA-Process-Surette-FastQ"
+author: "Conrad Izydorczyk"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here I am processing Surette uniques fastq files. These data will replace existing data for Surette uniques.
+
+#### Run trimmomatic:
+```{bash eval=F}
+(base) conrad@conrad-Precision-Tower-3620:~/all-pa/surette-uniques$ create_arc_fastqc_trimmomatic_unicycler_jobs.py --analysis trimmomatic --num_threads 12 --memmax 0 --maxtime 01:00:00 --partitions parallel --isolate_list surette-list.txt --chunk_size 3 --fastq_ending .fastq.gz --pair_ending _1,_2 --input_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/surette-uniques-raw-fastq/ --output_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/trimmed-fastq/ --jobs_dir trimmomatic-jobs/ --prefix suTrim --env trimmomatic-env --adapters_file /home/conrad.izydorczyk/TruSeq3-PE-2.fa --min_len 31 --read_len 250 --min_qual 5
+
+num_threads_arg = "12"
+memmax_arg = "0"
+maxtime_arg = "01:00:00"
+partitions_arg = "parallel"
+isolate_list_arg = "surette-list.txt"
+chunk_size_arg = "3"
+fastq_ending_arg = ".fastq.gz"
+input_dir_arg = "/work/parkins_lab/project/conrad/all-pa/surette-uniques/surette-uniques-raw-fastq/"
+output_dir_arg = "/work/parkins_lab/project/conrad/all-pa/surette-uniques/trimmed-fastq/"
+job_prefix_arg = "suTrim"
+adapters_file_arg = "/home/conrad.izydorczyk/TruSeq3-PE-2.fa"
+min_len_arg = "31"
+read_len_arg = "250"
+min_qual_arg = "5"
+jobs_dir_arg = "trimmomatic-jobs/"
+
+env_arg = "trimmomatic-env"
+```
+
+Upload and run on ARC.
+
+Now create Unicycler jobs.
+
+#### Run unicycler:
+```{bash eval=F}
+(base) conrad@conrad-Precision-Tower-3620:~/all-pa/surette-uniques$ create_arc_fastqc_trimmomatic_unicycler_jobs.py --analysis unicycler --num_threads 20 --memmax 90000 --maxtime 05:00:00 --partitions cpu2017-bf05,cpu2019-bf05 --isolate_list surette-list.txt --chunk_size 1 --fastq_ending .fastq.gz --pair_ending _1,_2 --input_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/trimmed-fastq/ --output_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/unicycler/ --jobs_dir unicycler-jobs/ --mode normal --depth_filter 0.25 --min_contig_len 200 --prefix suUni --env unicycler-env
+
+num_threads_arg = "20"
+memmax_arg = "90000"
+maxtime_arg = "05:00:00"
+partitions_arg = "cpu2017-bf05,cpu2019-bf05"
+isolate_list_arg = "surette-list.txt"
+chunk_size_arg = "1"
+fastq_ending_arg = ".fastq.gz"
+input_dir_arg = "/work/parkins_lab/project/conrad/all-pa/surette-uniques/trimmed-fastq/"
+output_dir_arg = "/work/parkins_lab/project/conrad/all-pa/surette-uniques/unicycler/"
+job_prefix_arg = "suUni"
+jobs_dir_arg = "unicycler-jobs/"
+mod_arg = "normal"
+depth_filter_arg = "0.25"
+min_contig_len_arg = "200"
+env_arg = "unicycler-env"
+```
+
+Upload and run on ARC.
+
+#### Annotate with bakta:
+```{bash eval=F}
+(base) conrad@conrad-Precision-Tower-3620:~/all-pa/surette-uniques$ create_arc_fastqc_trimmomatic_unicycler_jobs.py --analysis bakta --num_threads 20 --memmax 90000 --maxtime 05:00:00 --partitions cpu2019-bf05,cpu2017-bf05 --isolate_list surette-list.txt --chunk_size 1 --output_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/bakta/ --jobs_dir bakta-jobs/ --prefix suBkt --env bakta-1.7 --genus Pseudomonas --species aeruginosa --bakta_db /home/conrad.izydorczyk/bakta-db-2023-03-02/db/ --assembly_dir /work/parkins_lab/project/conrad/all-pa/surette-uniques/unicycler/ --assembly_suffix assembly.fasta --min_contig_len 200
+```
+
+I then manually replaced all assemblies/annotations for Surette uniques that previously existed from the fasta files Barb sent me with the output produced here (to be consistent in processing of all PA data).
